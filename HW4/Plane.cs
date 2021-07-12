@@ -11,10 +11,13 @@ namespace HW4
         public double Value { get; set; }
         public double Speed { get; set; }
         public int Year { get; set; }
+        public int Passengers { get; set; }
 
-        public void Move(Point location, Map map)
+        public TimeInterval Move(Point location)
         {
-            throw new NotImplementedException();
+            var dist = Math.Sqrt(Math.Pow((Position.X - location.X), 2) + Math.Pow((Position.Y - location.Y), 2));
+            Position = location;
+            return new TimeInterval(60 + (int)(60 * dist / Speed));
         }
     }
 }

@@ -11,6 +11,6 @@ namespace HW4
         double Value { get; set; }
         double Speed { get; set; }
         int Year { get; set; }
-        void Move(Point location, Map map);
+        TimeInterval Move(Point location);
     }
 }
