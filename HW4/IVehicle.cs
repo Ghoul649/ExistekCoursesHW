@@ -12,5 +12,6 @@ namespace HW4
         double Speed { get; set; }
         int Year { get; set; }
         TimeInterval Move(Point location);
+        string GetInfo();
     }
 }
