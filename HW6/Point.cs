@@ -8,14 +8,18 @@ namespace HW6
     {
         private static int _nextCharNum = 'A';
         private static int _maxCharNum = 'Z';
-        public double X { get; }
-        public double Y { get; }
-        public char CharName { get; set; }
+        public double X { get; set; }
+        public double Y { get; set; }
+        public char CharName { get; }
         public Point() 
         {
             if (_nextCharNum > _maxCharNum)
                 throw new Exception("All characters had been used");
             CharName = (char)_nextCharNum++;
+        }
+        public override string ToString()
+        {
+            return $"{CharName} ({X} : {Y})";
         }
     }
 }
