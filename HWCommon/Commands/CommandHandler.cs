@@ -46,7 +46,7 @@ namespace HWCommon.Commands
             {
                 foreach (var cmd in this) 
                 {
-                    if (cmd.Keyword == keyword)
+                    if (cmd.Keyword.Equals(keyword, cmd.IgnoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal)) 
                         return cmd;
                 }
                 return null;

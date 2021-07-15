@@ -9,7 +9,8 @@ namespace HWCommon.Commands
     public class Command
     {
         public string Keyword { get; protected set; }
-        public string Description { get; protected set; }
+        public string Description { get; set; }
+        public bool IgnoreCase { get; set; } = true;
         public CommandAction Action { get; protected set; }
         public MethodInfo Method { get; protected set; }
         public IEnumerable<Parameter> Parameters { get => _params; }
@@ -32,10 +33,13 @@ namespace HWCommon.Commands
         }
         public virtual bool Parse(string command) 
         {
-            if (!command.StartsWith(Keyword))
+            if (!command.StartsWith(Keyword, IgnoreCase? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
                 return false;
             int index = Keyword.Length;
             object[] args = new object[_params.Count];
+            if (command.Length > index)
+                if (command[index] != ' ')
+                    return false;
 
             for (int i = 0; i < _params.Count; i++) 
             {
@@ -47,6 +51,13 @@ namespace HWCommon.Commands
                 {
                     throw new Exception($"Wrong syntax. Use: {GetSyntax()}");
                 }
+            }
+            string extraStr = null;
+            if (command.Length > ++index) 
+            {
+                extraStr = command.Substring(index);
+                if (!string.IsNullOrWhiteSpace(extraStr))
+                    return false;
             }
             try
             {
