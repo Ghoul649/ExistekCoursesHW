@@ -15,6 +15,12 @@ namespace HW7
         {
             return base.ToString();
         }
+        public void WriteLine(StringBuilder sb, int level) 
+        {
+            sb.Append('\n');
+            for (int i = 0; i < level; i++)
+                sb.Append('\t');
+        }
         public void WriteType(StringBuilder sb, Type t)
         {
             if (!Namespaces.Contains(t.Namespace))
@@ -34,7 +40,7 @@ namespace HW7
             else
                 sb.Append(t.Name);
         }
-        public void WriteProp(StringBuilder sb, PropertyInfo prop)
+        public void WriteProp(StringBuilder sb, PropertyInfo prop, int level)
         {
             bool isPublic = prop.CanWrite && prop.SetMethod.IsPublic;
             isPublic = isPublic || prop.CanRead && prop.GetMethod.IsPublic;
@@ -47,14 +53,18 @@ namespace HW7
             if (AutoProps)
                 sb.Append(" { ");
             else
-                sb.Append("\n{\n\t");
+            {
+                WriteLine(sb, level);
+                sb.Append("{");
+                WriteLine(sb, level + 1);
+            }
             if (prop.CanRead)
             {
                 WritePropMethod(sb, prop.GetMethod);
                 if (!AutoProps)
                 {
                     if (prop.CanWrite)
-                        sb.Append("\n\t");
+                        WriteLine(sb, level + 1);
                 }
                 else
                     if (prop.CanWrite)
@@ -62,7 +72,12 @@ namespace HW7
             }
             if (prop.CanWrite)
                 WritePropMethod(sb, prop.SetMethod);
-            sb.Append(AutoProps ? " " : " \n");
+            if (AutoProps)
+            {
+                sb.Append(' ');
+            }
+            else
+                WriteLine(sb, level);
             sb.Append('}');
 
         }
@@ -88,7 +103,7 @@ namespace HW7
             foreach (var ns in Namespaces)
                 sb.AppendLine($"using {ns};");
         }
-        public void WriteMethod(StringBuilder sb, MethodInfo method)
+        public void WriteMethod(StringBuilder sb, MethodInfo method, int level)
         {
             if (method.Attributes.HasFlag(MethodAttributes.Public))
                 sb.Append("public ");
@@ -96,12 +111,42 @@ namespace HW7
                 sb.Append("static ");
             if (method.Attributes.HasFlag(MethodAttributes.Virtual))
                 sb.Append("virtual ");
+
             if (method.ReturnType == typeof(void))
                 sb.Append("void ");
+            else 
+            {
+                WriteType(sb, method.ReturnType);
+                sb.Append(' ');
+            }
 
             sb.Append(method.Name);
+            sb.Append('(');
+            var parameters = method.GetParameters();
+            for(int i = 0; i < parameters.Length; i++)
+            {
+                WriteType(sb, parameters[i].ParameterType);
+                sb.Append($" {parameters[i].Name}");
+                if (i + 1 < parameters.Length)
+                    sb.Append(", ");
+            }
+            sb.Append(")");
+            WriteLine(sb, level);
+            sb.Append('{');
+            WriteLine(sb, level + 1);
+            sb.Append("throw new NotImplementedException();");
+            WriteLine(sb, level);
+            sb.Append('}');
         }
-        public void WriteClass(StringBuilder sb, Type t)
+        public void WriteProps(StringBuilder sb, Type t, int level) 
+        {
+            foreach (var prop in t.GetProperties())
+            {
+                WriteProp(sb, prop, level);
+                WriteLine(sb, level);
+            }
+        }
+        public void WriteMethods(StringBuilder sb, Type t, int level)
         {
             var methods = t.GetMethods().Where(t =>
                 t.Attributes.HasFlag(MethodAttributes.Public) &&
@@ -110,9 +155,32 @@ namespace HW7
             );
             foreach (var method in methods)
             {
-                WriteMethod(sb, method);
+                WriteMethod(sb, method, level);
+                WriteLine(sb, level);
             }
         }
-        
+        public void WriteClass(StringBuilder sb, Type t, int level)
+        {
+            sb.Append($"class {t.Name}");
+            WriteLine(sb, level);
+            sb.Append('{');
+            WriteLine(sb,level + 1);
+            WriteProps(sb, t, level + 1);
+            WriteMethods(sb, t, level + 1);
+            WriteLine(sb, level);
+            sb.Append('}');
+
+        }
+        public string WriteClassWithNS(Type t) 
+        {
+            StringBuilder sb = new StringBuilder();
+            StringBuilder body = new StringBuilder();
+
+            WriteClass(body, t, 1);
+            WriteNamespaces(sb);
+            sb.Append('\n');
+            sb.Append($"namespace {t.Namespace}\n{{\n\t{body}\n}}");
+            return sb.ToString();
+        }
     }
 }

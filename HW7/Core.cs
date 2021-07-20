@@ -27,7 +27,9 @@ namespace HW7
             _loadedTypes = CurrentAssembly.GetTypes().Where(t =>
                 !t.IsAbstract &&
                 !t.IsInterface &&
-                !t.IsGenericType
+                !t.IsGenericType &&
+                t.IsClass &&
+                !t.FullName.StartsWith('<')
             );
         }
 
@@ -76,20 +78,32 @@ namespace HW7
         {
             Type selectedType = _loadedTypes.First(t => t.FullName == type);
             Generator g = new Generator();
-
-            StringBuilder sb = new StringBuilder();
-
-            g.WriteClass(sb, selectedType);
-
-            foreach (var prop in selectedType.GetProperties())
+            Console.WriteLine(g.WriteClassWithNS(selectedType));
+        }
+        [Command("Save code of class to file")]
+        public void SaveCode(string type)
+        {
+            Type selectedType = _loadedTypes.First(t => t.FullName == type);
+            Generator g = new Generator();
+            string code = g.WriteClassWithNS(selectedType);
+            if (File.Exists($"{selectedType.Name}.cs")) 
             {
-                g.WriteProp(sb, prop);
-                sb.Append('\n');
+                Console.WriteLine($"File {selectedType.Name}.cs already exists. Press Y to replace it or another key to create new file");
+                var key = Console.ReadKey();
+                if (key.Key == ConsoleKey.Y)
+                    File.WriteAllText($"{selectedType.Name}.cs", code);
+                else 
+                {
+                    int index = 1;
+                    while (File.Exists($"{selectedType.Name}{index}.cs")) 
+                    {
+                        index++;
+                    }
+                    File.WriteAllText($"{selectedType.Name}{index}.cs", code);
+                }
             }
-            StringBuilder ns = new StringBuilder();
-            g.WriteNamespaces(ns);
-            Console.WriteLine(ns.ToString() + sb.ToString());
-
+            else
+                File.WriteAllText($"{selectedType.Name}.cs", code);
         }
     }
 }
