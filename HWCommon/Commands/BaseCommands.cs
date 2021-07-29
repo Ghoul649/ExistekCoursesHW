@@ -37,8 +37,11 @@ namespace HWCommon.Commands
             {
                 Console.Write("\nParameters:\n");
                 foreach (var param in cmd.Parameters)
-                    Console.WriteLine($"\t{param.Name} - {param.Description}");
+                    Console.WriteLine($"\t{AllowedTypes.GeTypeName(param.ParameterType)} {param.Name} {(string.IsNullOrWhiteSpace(param.Description)?' ':'-')} {param.Description}");
             }
+            Console.Write("\nOutput:\n");
+            Console.WriteLine($"\t{cmd.Output}");
+
         }
     }
 }

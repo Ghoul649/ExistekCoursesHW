@@ -5,11 +5,12 @@ using System.Text;
 
 namespace HWCommon.Commands
 {
-    public delegate string CommandAction(object[] args);
+    public delegate object CommandAction(object[] args);
     public class Command
     {
         public string Keyword { get; protected set; }
         public string Description { get; set; }
+        public string Output { get; set; }
         public bool IgnoreCase { get; set; } = true;
         public CommandAction Action { get; protected set; }
         public MethodInfo Method { get; protected set; }
@@ -22,24 +23,31 @@ namespace HWCommon.Commands
             Method = method;
             Keyword = attr?.Keyword ?? method.Name;
             Description = attr?.Description;
+            Output = attr?.Output ?? AllowedTypes.GeTypeName(method.ReturnType);
             foreach (var param in method.GetParameters()) 
             {
                 _params.Add(new Parameter(param));
             }
             Action = args =>
             {
-                return Method.Invoke(_module, args)?.ToString();
+                return Method.Invoke(_module, args);
             };
         }
-        public virtual bool Parse(string command) 
+        public virtual bool Parse(string command, out object result) 
         {
-            if (!command.StartsWith(Keyword, IgnoreCase? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+            if (!command.StartsWith(Keyword, IgnoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+            {
+                result = null;
                 return false;
+            }
             int index = Keyword.Length;
             object[] args = new object[_params.Count];
             if (command.Length > index)
                 if (command[index] != ' ')
+                {
+                    result = null;
                     return false;
+                }
 
             for (int i = 0; i < _params.Count; i++) 
             {
@@ -57,11 +65,14 @@ namespace HWCommon.Commands
             {
                 extraStr = command.Substring(index);
                 if (!string.IsNullOrWhiteSpace(extraStr))
+                {
+                    result = null;
                     return false;
+                }
             }
             try
             {
-                Action.Invoke(args);
+                result = Action.Invoke(args);
             }
             catch (Exception e)
             {

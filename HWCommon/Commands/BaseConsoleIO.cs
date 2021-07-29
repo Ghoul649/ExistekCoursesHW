@@ -11,7 +11,9 @@ namespace HWCommon.Commands
                 try
                 {
                     Console.Write("->");
-                    manager.Execute(Console.ReadLine());
+                    var res = manager.Execute(Console.ReadLine());
+                    if (res != null)
+                        Console.WriteLine(res);
                 }
                 catch (Exception e)
                 {

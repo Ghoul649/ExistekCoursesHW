@@ -28,11 +28,12 @@ namespace HWCommon.Commands
                 }
             }
         }
-        public void Execute(string value) 
+        public object Execute(string value) 
         {
+            object result = null;
             foreach (var cmd in _commands)
-                if (cmd.Parse(value))
-                    return;
+                if (cmd.Parse(value, out result))
+                    return result;
             throw new ArgumentException($"Unknown command");
         }
 

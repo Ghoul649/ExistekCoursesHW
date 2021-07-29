@@ -17,13 +17,6 @@ namespace HW8
             int y = int.Parse(res[1]);
             return new Matrix<double>(x, y, res[2], ',');
         }
-        [Converter(typeof(Type))]
-        public static object ToType(string value) 
-        {
-            var res = Type.GetType(value);
-            if (res is null)
-                throw new Exception($"There is no type with name \"{value}\"");
-            return res;
-        }
+        
     }
 }

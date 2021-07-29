@@ -39,5 +39,10 @@ namespace HWCommon.Commands.Converters
         {
             return double.Parse(value);
         }
+        [Converter(typeof(System.Type))]
+        public static object ToType(string value)
+        {
+            return AllowedTypes.GetType(value);
+        }
     }
 }

@@ -6,6 +6,7 @@ namespace HWCommon.Commands
     {
         public string Keyword { get; set; }
         public string Description { get; set; }
+        public string Output { get; set; }
         public bool IgnoreCase { get; set; }
         public CommandAttribute() { }
         public CommandAttribute(string desc) 

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace HW8
 {
@@ -57,9 +58,26 @@ namespace HW8
             if (A.Width != B.Height)
                 throw new Exception("Matrices are not compatible");
             Matrix<T> result = new Matrix<T>(B.Width, A.Height);
-            for (int x = 0; x < B.Width; x++)
-                for (int y = 0; y < A.Height; y++)
-                    result[x, y] = multiplyRowCol(x, y, A, B, mFunc, aFunc);
+            int pcount = Environment.ProcessorCount;
+            int mx = B.Width;
+            int my = A.Height;
+            Parallel.For(0,pcount,(index) => 
+            {
+                int max = B.Width * A.Height;
+                int i = max / pcount * index;
+                int to = max / pcount * (index + 1);
+                if (index == pcount - 1)
+                    to = max;
+                int x, y;
+                while (i < to) 
+                {
+                    y = i % my;
+                    x = i / my;
+                    result[x,y] = multiplyRowCol(x, y, A, B, mFunc, aFunc);
+                    i++;
+                }
+
+            });
             return result;
         }
         private static T multiplyRowCol(int x, int y, Matrix<T> A, Matrix<T> B, Func<T, T, T> mFunc, Func<T, T, T> aFunc) 
@@ -76,7 +94,12 @@ namespace HW8
             {
                 for (int y = 0; y < Height; y++) 
                 {
-                    sb.Append(matrix[x, y]);
+                    object val = matrix[x, y];
+                    if (typeof(T) == typeof(double)) 
+                    {
+                        val = Math.Round((double)val, 2).ToString().PadLeft(10);
+                    }
+                    sb.Append(val);
                     if (x + 1 != Width || y + 1 != Height)
                         sb.Append(", ");
                 }

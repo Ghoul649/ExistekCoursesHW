@@ -1,0 +1,12 @@
+Example:
+
+->var a generate 1000 500 0 10 123
+->var b generate 500 1000 0 10 124
+->mesure var res1 multiply a b
+11,572 seconds
+->mesure var res2 paralelMultiply a b
+4,596 seconds
+->read res1
+...
+->read res2
+...
