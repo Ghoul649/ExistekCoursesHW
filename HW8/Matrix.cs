@@ -53,31 +53,37 @@ namespace HW8
                     result[x, y] = multiplyRowCol(x, y, A, B, mFunc, aFunc);
             return result;
         }
-        public static Matrix<T> ParalelMultiply(Matrix<T> A, Matrix<T> B, Func<T, T, T> mFunc, Func<T, T, T> aFunc)
+        public static Matrix<T> ParalelMultiply(Matrix<T> A, Matrix<T> B, Func<T, T, T> mFunc, Func<T, T, T> aFunc, int? threads = null)
         {
             if (A.Width != B.Height)
                 throw new Exception("Matrices are not compatible");
             Matrix<T> result = new Matrix<T>(B.Width, A.Height);
-            int pcount = Environment.ProcessorCount;
+            int pcount = threads ?? Environment.ProcessorCount;
             int mx = B.Width;
             int my = A.Height;
-            Parallel.For(0,pcount,(index) => 
+            Task[] tasks = new Task[pcount];
+            for (int i = 0; i < pcount; i++)
             {
-                int max = B.Width * A.Height;
-                int i = max / pcount * index;
-                int to = max / pcount * (index + 1);
-                if (index == pcount - 1)
-                    to = max;
-                int x, y;
-                while (i < to) 
+                tasks[i] = new Task((param) =>
                 {
-                    y = i % my;
-                    x = i / my;
-                    result[x,y] = multiplyRowCol(x, y, A, B, mFunc, aFunc);
-                    i++;
-                }
-
-            });
+                    int index = (int)param;
+                    int max = B.Width * A.Height;
+                    int i = max / pcount * index;
+                    int to = max / pcount * (index + 1);
+                    if (index == pcount - 1)
+                        to = max;
+                    int x, y;
+                    while (i < to)
+                    {
+                        y = i % my;
+                        x = i / my;
+                        result[x, y] = multiplyRowCol(x, y, A, B, mFunc, aFunc);
+                        i++;
+                    }
+                },i);
+                tasks[i].Start();
+            }
+            Task.WaitAll(tasks);
             return result;
         }
         private static T multiplyRowCol(int x, int y, Matrix<T> A, Matrix<T> B, Func<T, T, T> mFunc, Func<T, T, T> aFunc) 
