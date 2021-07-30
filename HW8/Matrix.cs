@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace HW8
 {
@@ -61,10 +62,10 @@ namespace HW8
             int pcount = threads ?? Environment.ProcessorCount;
             int mx = B.Width;
             int my = A.Height;
-            Task[] tasks = new Task[pcount];
+            Thread[] thrds = new Thread[pcount];
             for (int i = 0; i < pcount; i++)
             {
-                tasks[i] = new Task((param) =>
+                thrds[i] = new Thread((param) =>
                 {
                     int index = (int)param;
                     int max = B.Width * A.Height;
@@ -80,10 +81,11 @@ namespace HW8
                         result[x, y] = multiplyRowCol(x, y, A, B, mFunc, aFunc);
                         i++;
                     }
-                },i);
-                tasks[i].Start();
+                });
+                thrds[i].Start(i);
             }
-            Task.WaitAll(tasks);
+            foreach (var thread in thrds) 
+                thread.Join();
             return result;
         }
         private static T multiplyRowCol(int x, int y, Matrix<T> A, Matrix<T> B, Func<T, T, T> mFunc, Func<T, T, T> aFunc) 
